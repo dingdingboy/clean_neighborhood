@@ -1,0 +1,1 @@
+export { MediaDropzone } from './MediaDropzone';

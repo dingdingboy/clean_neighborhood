@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # FastAPI application
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage:/app/storage
+      - ./models:/app/models:ro
+    environment:
+      - DATABASE_URL=sqlite:///storage/db.sqlite
+      - REDIS_URL=redis://redis:6379/0
+      - MODEL_PATH=/app/models/qwen3_5_vl_openvino
+      - OPENVINO_DEVICE=CPU
+      - STORAGE_PATH=/app/storage/uploads
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+    depends_on:
+      - redis
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Celery worker for async tasks
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./storage:/app/storage
+      - ./models:/app/models:ro
+    environment:
+      - DATABASE_URL=sqlite:///storage/db.sqlite
+      - REDIS_URL=redis://redis:6379/0
+      - MODEL_PATH=/app/models/qwen3_5_vl_openvino
+      - OPENVINO_DEVICE=CPU
+      - STORAGE_PATH=/app/storage/uploads
+    depends_on:
+      - redis
+      - api
+    command: celery -A celery_worker.celery_app worker -l info -c 2 -Q media,analysis,submission
+
+  # Celery beat for scheduled tasks (optional)
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./storage:/app/storage
+    environment:
+      - DATABASE_URL=sqlite:///storage/db.sqlite
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    command: celery -A celery_worker.celery_app beat -l info
+
+  # Redis message broker
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+
+  # Frontend (React + Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+volumes:
+  redis_data:

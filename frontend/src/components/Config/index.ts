@@ -1,0 +1,1 @@
+export { OfficeConfig } from './OfficeConfig';
