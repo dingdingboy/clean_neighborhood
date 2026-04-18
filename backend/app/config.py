@@ -18,9 +18,21 @@ class Settings(BaseSettings):
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
 
-    # AI Model
-    MODEL_PATH: str = "./models/qwen3_5_vl_openvino"
-    OPENVINO_DEVICE: str = "CPU"
+    # AI Model - llama.cpp GGUF
+    LLAMA_MODEL_PATH: str = "/home/aiguru/models/Qwen3.5-9B/Qwen3.5-9B-UD-Q4_K_XL.gguf"
+    LLAMA_MMPROJ_PATH: str = "/home/aiguru/models/Qwen3.5-9B/mmproj-BF16.gguf"
+    LLAMA_CLI_PATH: str = "~/repo/llama.cpp/build/bin"
+
+    # llama-server connection
+    LLAMA_SERVER_HOST: str = "localhost"
+    LLAMA_SERVER_PORT: int = 8080
+    LLAMA_SERVER_URL: str = "http://localhost:8080"
+
+    # Model inference parameters
+    LLAMA_CONTEXT_SIZE: int = 32768
+    LLAMA_THREADS: int = -1  # -1 = use all available cores
+    LLAMA_BATCH_SIZE: int = 2048
+    LLAMA_GPU_LAYERS: int = 0  # 0 = CPU only, increase for GPU offloading
 
     # Storage
     STORAGE_PATH: Path = Path("./storage/uploads")

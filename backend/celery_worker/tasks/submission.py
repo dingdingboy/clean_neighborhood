@@ -18,7 +18,11 @@ def submit_complaint(self, decision_result: dict):
     from sqlalchemy import select
 
     async def _submit():
-        report_id = decision_result.get("report_id")
+        # Handle both dict and int (report_id) as input
+        if isinstance(decision_result, dict):
+            report_id = decision_result.get("report_id")
+        else:
+            report_id = decision_result
 
         async with SessionLocal() as session:
             result = await session.execute(

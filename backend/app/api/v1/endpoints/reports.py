@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.db.session import get_db
 from app.models import Report, ConfigOffice
+from celery_worker.tasks.media_pipeline import process_media_pipeline
 from app.schemas.report import (
     ReportCreate,
     ReportUpdate,
@@ -217,9 +218,8 @@ async def submit_report(
     report.submitted_at = datetime.utcnow()
     await db.flush()
 
-    # TODO: Trigger Celery task for processing
-    # from celery_worker.tasks.media_pipeline import process_media_pipeline
-    # process_media_pipeline.delay(report_id)
+    # Trigger Celery task for processing
+    process_media_pipeline.delay(report_id)
 
     return {"success": True, "report_id": report_id, "status": "analyzing"}
 
